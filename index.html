@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Birthday Quest 💖</title>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+.background-hearts {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.background-hearts span {
+  position: absolute;
+  color: white;
+  font-size: 20px;
+  animation: float 10s linear infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(100vh); opacity: 0; }
+  20% { opacity: 0.6; }
+  100% { transform: translateY(-10vh); opacity: 0; }
+}
+
+body {
+  margin: 0;
+  font-family: 'Quicksand', sans-serif;
+  background: #ffc0cb;
+  text-align: center;
+  color: #5a2a4d;
+  overflow-x: hidden;
+}
+
+.section {
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  padding: 30px 20px;
+  min-height: 100vh;
+  position: absolute;
+  width: 100%;
+}
+
+.active {
+  opacity: 1;
+  position: relative;
+}
+  padding: 30px 20px;
+  min-height: 100vh;
+}
+
+.active {
+  display: block;
+}
+
+button {
+  padding: 14px 22px;
+  margin: 10px;
+  border: none;
+  border-radius: 30px;
+  background: white;
+  color: #ff4f8b;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+input {
+  padding: 12px;
+  border-radius: 25px;
+  border: none;
+  width: 70%;
+  text-align: center;
+}
+
+#gameArea {
+  position: relative;
+  height: 300px;
+  background: rgba(255,255,255,0.5);
+  border-radius: 20px;
+  margin-top: 20px;
+  overflow: hidden;
+}
+
+.heart {
+  position: absolute;
+  font-size: 28px;
+}
+
+#basket {
+  position: absolute;
+  bottom: 10px;
+  font-size: 40px;
+  left: 40%;
+}
+
+canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+</style>
+</head>
+
+<body>
+<div class="background-hearts">
+  <span style="left:10%">💖</span>
+  <span style="left:30%">💗</span>
+  <span style="left:60%">💞</span>
+  <span style="left:80%">💕</span>
+</div>
+
+<audio id="bgMusic" src="music.mp3" loop></audio>
+
+<!-- Welcome -->
+<div id="welcome" class="section active">
+  <h1>🎂 Birthday Quest 💖</h1>
+  <p>Complete the mini challenges to unlock your surprise</p>
+  <button onclick="startGame()">Start</button>
+</div>
+
+<!-- Quiz -->
+<div id="quiz" class="section">
+  <h2>Mini Love Quiz 💌</h2>
+  <p id="question"></p>
+  <div id="answers"></div>
+</div>
+
+<!-- Catch Game -->
+<div id="catchGame" class="section">
+  <h2>Catch 5 Hearts 💕</h2>
+  <p>Move the basket with your finger</p>
+  <div>Score: <span id="score">0</span></div>
+  <div id="gameArea">
+    <div id="basket">🧺</div>
+  </div>
+</div>
+
+<!-- Password -->
+<div id="passwordSection" class="section">
+  <h2>Secret Code 🔐</h2>
+  <p>Hint: The nickname you call me 👀</p>
+  <input type="text" id="passwordInput">
+  <br>
+  <button onclick="checkPassword()">Unlock</button>
+</div>
+
+<!-- Final -->
+<div id="final" class="section">
+  <h1>🎉 HAPPY BIRTHDAY MY LOVE 🎉</h1>
+  <p>You make my world brighter every single day 💖</p>
+  <p>I’m so lucky to have you.</p>
+</div>
+
+<canvas id="confetti"></canvas>
+
+<script>
+
+const music = document.getElementById("bgMusic");
+
+function showSection(id) {
+  document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+function startGame() {
+  music.play();
+  showSection("quiz");
+  loadQuestion();
+}
+
+/* QUIZ */
+const quizData = [
+  { question: "Who fell first?", answers: ["Me 😌","You 😏"], correct: 0 },
+  { question: "How much do you love me?", answers: ["more.","MOREEEEE"], correct: 1 }
+  { question: "Do you like this surprise so far??", answers: ["YESS","maybee"], correct: 0 }
+  { question: "Do I love you moree??", answers: ["maybe","OFCOURSE"], correct: 1 }
+];
+
+let currentQuestion = 0;
+
+function loadQuestion() {
+  const q = quizData[currentQuestion];
+  document.getElementById("question").innerText = q.question;
+  const answersDiv = document.getElementById("answers");
+  answersDiv.innerHTML = "";
+  q.answers.forEach((answer, index) => {
+    const btn = document.createElement("button");
+    btn.innerText = answer;
+    btn.onclick = () => checkAnswer(index);
+    answersDiv.appendChild(btn);
+  });
+}
+
+function checkAnswer(index) {
+  if(index === quizData[currentQuestion].correct) {
+    currentQuestion++;
+    if(currentQuestion < quizData.length) {
+      loadQuestion();
+    } else {
+      startCatchGame();
+    }
+  } else {
+    alert("Try again Babiee G 💕");
+  }
+}
+
+/* CATCH GAME */
+let score = 0;
+const basket = document.getElementById("basket");
+const gameArea = document.getElementById("gameArea");
+
+gameArea.addEventListener("touchmove", function(e) {
+  const touch = e.touches[0];
+  const rect = gameArea.getBoundingClientRect();
+  basket.style.left = (touch.clientX - rect.left - 20) + "px";
+});
+
+function startCatchGame() {
+  showSection("catchGame");
+  score = 0;
+  document.getElementById("score").innerText = score;
+  dropHeart();
+}
+
+function dropHeart() {
+  const heart = document.createElement("div");
+  heart.classList.add("heart");
+  heart.innerText = "💖";
+  heart.style.left = Math.random() * 80 + "%";
+  gameArea.appendChild(heart);
+
+  let top = 0;
+  const fall = setInterval(() => {
+    top += 4;
+    heart.style.top = top + "px";
+
+    if(top > 260) {
+      const heartRect = heart.getBoundingClientRect();
+      const basketRect = basket.getBoundingClientRect();
+
+      if(
+        heartRect.left < basketRect.right &&
+        heartRect.right > basketRect.left
+      ) {
+        score++;
+        document.getElementById("score").innerText = score;
+        if(score >= 5) {
+          clearInterval(fall);
+          showSection("passwordSection");
+        }
+      }
+
+      heart.remove();
+      clearInterval(fall);
+      if(score < 5) dropHeart();
+    }
+  }, 30);
+}
+
+/* PASSWORD */
+function checkPassword() {
+  const input = document.getElementById("passwordInput").value.toLowerCase();
+  if(input === "babyy") {  // CHANGE THIS
+    showSection("final");
+    startConfetti();
+  } else {
+    alert("Wrong password 😜");
+  }
+}
+
+/* CONFETTI */
+function startConfetti() {
+  const canvas = document.getElementById("confetti");
+  const ctx = canvas.getContext("2d");
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  let pieces = [];
+
+  for(let i=0;i<150;i++){
+    pieces.push({
+      x: Math.random()*canvas.width,
+      y: Math.random()*canvas.height,
+      r: Math.random()*6+4,
+      d: Math.random()*50
+    });
+  }
+
+  function draw() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    pieces.forEach(p => {
+      ctx.moveTo(p.x,p.y);
+      ctx.arc(p.x,p.y,p.r,0,Math.PI*2,true);
+    });
+    ctx.fill();
+    update();
+  }
+
+  function update() {
+    pieces.forEach(p => {
+      p.y += Math.cos(p.d) + 1;
+      if(p.y > canvas.height) {
+        p.y = -10;
+      }
+    });
+  }
+
+  setInterval(draw,20);
+}
+
+</script>
+</body>
+</html>
